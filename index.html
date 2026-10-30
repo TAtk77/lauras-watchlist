@@ -210,15 +210,19 @@ const FILMS = [
     c1: "#8fb36a", ink: "#1f2a12", art: "radial-gradient(ellipse at 50% 0%, rgba(255,240,190,.5), transparent 55%), linear-gradient(0deg, rgba(40,60,20,.35), transparent 30%)", top: true },
   { id: "wildcats", t: "Wildcats", y: 1986, d: "Michael Ritchie", m: 106,
     l: "Goldie Hawn takes the coaching job nobody wants: a rough inner-city high school football team.",
-    c1: "#5b2a86", ink: "#ffd23f", art: "repeating-linear-gradient(0deg, transparent 0 11%, rgba(255,255,255,.1) 11% 12%), linear-gradient(180deg, transparent 62%, rgba(255,210,63,.3) 62% 66%, transparent 66%)", top: true }
+    c1: "#5b2a86", ink: "#ffd23f", art: "repeating-linear-gradient(0deg, transparent 0 11%, rgba(255,255,255,.1) 11% 12%), linear-gradient(180deg, transparent 62%, rgba(255,210,63,.3) 62% 66%, transparent 66%)", top: true },
+  { id: "bloodline", t: "Bloodline", y: "2015–17", d: "Kessler, Kessler & Zelman",
+    sub: "TV series · 2015–2017 · 3 seasons · 33 episodes",
+    l: "The black sheep son comes home to the Florida Keys and pulls his family's secrets to the surface.",
+    c1: "#0f5a63", ink: "#fde7c4", art: "linear-gradient(180deg, rgba(255,140,70,.55) 0%, rgba(240,90,80,.25) 32%, transparent 48%), linear-gradient(180deg, transparent 58%, rgba(5,30,40,.6) 58%), repeating-linear-gradient(0deg, transparent 0 6px, rgba(255,255,255,.06) 6px 7px)", top: true }
 ];
 
 // Films Tina has on TFlix
-const ON_TFLIX = new Set(["shawshank", "timetokill", "kingpin", "ninetofive", "greenmile", "gone60", "mrdeeds",
+const ON_TFLIX = new Set(["shawshank", "timetokill", "kingpin", "ninetofive", "greenmile", "gone60", "mrdeeds", "bloodline",
   "jackiebrown", "primalfear", "rainman", "ratrace", "dochollywood", "wildcats"]);
 
 // Empty "?" slots at the end of the grid, waiting for new picks
-const MYSTERY_SLOTS = 2;
+const MYSTERY_SLOTS = 1;
 
 const KEY = "laura-watchlist-v1";
 let state = {};
@@ -248,7 +252,7 @@ function render() {
       <div class="meta">
         ${ON_TFLIX.has(f.id) ? '<span class="tflix">On TFlix</span>' : ''}
         <h2>${f.t}</h2>
-        <span class="sub">${f.y} · ${f.d} · ${f.m} min</span>
+        <span class="sub">${f.sub || `${f.y} · ${f.d} · ${f.m} min`}</span>
         <p>${f.l}</p>
       </div>
       <div class="actions">
