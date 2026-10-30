@@ -74,7 +74,7 @@ h1 {
 @media (max-width: 680px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 460px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; } }
 
-.film { display: grid; gap: 8px; min-width: 0; }
+.film { display: grid; gap: 8px; min-width: 0; align-content: start; }
 .poster {
   position: relative; aspect-ratio: 2 / 3; max-width: 100%; border-radius: 4px; overflow: hidden;
   display: flex; flex-direction: column; justify-content: space-between; padding: 10% 9%;
@@ -130,6 +130,13 @@ h1 {
 }
 .stars button.on { color: var(--accent); }
 
+.mystery .poster {
+  background: var(--surface); color: var(--muted); align-items: center; justify-content: center;
+  box-shadow: inset 0 0 0 2px var(--line); border: 0;
+  background-image: repeating-linear-gradient(135deg, transparent 0 10px, rgba(255,255,255,.025) 10px 20px);
+}
+.mystery .q { font-family: var(--display); font-weight: 900; font-size: clamp(56px, 8vw, 96px); line-height: 1; color: var(--accent); opacity: .8; }
+.mystery:hover .poster { transform: none; box-shadow: inset 0 0 0 2px var(--line); }
 .empty { color: var(--muted); padding: 40px 0; text-align: center; }
 footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 16px; }
 
@@ -207,8 +214,11 @@ const FILMS = [
 ];
 
 // Films Tina has on TFlix
-const ON_TFLIX = new Set(["shawshank", "timetokill", "kingpin", "ninetofive", "greenmile", "gone60",
+const ON_TFLIX = new Set(["shawshank", "timetokill", "kingpin", "ninetofive", "greenmile", "gone60", "mrdeeds",
   "jackiebrown", "primalfear", "rainman", "ratrace", "dochollywood", "wildcats"]);
+
+// Empty "?" slots at the end of the grid, waiting for new picks
+const MYSTERY_SLOTS = 2;
 
 const KEY = "laura-watchlist-v1";
 let state = {};
@@ -261,13 +271,27 @@ function render() {
     }));
     grid.appendChild(li);
   }
+  if (filter !== "seen") {
+    for (let i = 0; i < MYSTERY_SLOTS; i++) {
+      const li = document.createElement("li");
+      li.className = "film mystery";
+      li.innerHTML = `
+        <div class="poster" aria-hidden="true"><span class="q">?</span></div>
+        <div class="meta">
+          <h2>Mystery pick</h2>
+          <span class="sub">Coming soon</span>
+          <p>Tina is still choosing this one. Check back.</p>
+        </div>`;
+      grid.appendChild(li);
+    }
+  }
   const seenCount = FILMS.filter(f => state[f.id] && state[f.id].seen).length;
   document.getElementById("count").textContent = `${seenCount}/${FILMS.length}`;
   document.getElementById("meterFill").style.width = (seenCount / FILMS.length * 100) + "%";
   document.getElementById("countLabel").textContent =
     seenCount === FILMS.length ? "watched. Faith in Laura restored." : "watched";
   const empty = document.getElementById("empty");
-  empty.hidden = shown.length > 0;
+  empty.hidden = shown.length > 0 || filter !== "seen";
   empty.textContent = filter === "seen" ? "Nothing watched yet. Start with Shawshank." : "All caught up. Tina is proud of you.";
 }
 
