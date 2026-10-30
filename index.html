@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laura's Watchlist</title>
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: film-diary wall — header with progress, filter tabs, poster grid 5→4→3→2 across */
+:root {
+  --bg: #15191f;
+  --surface: #1e242c;
+  --line: #2c343e;
+  --fg: #e8ecf0;
+  --muted: #8b97a5;
+  --accent: #f2a93b;
+  --seen: #4cc38a;
+  --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.wrap {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header { display: grid; gap: 6px; margin-bottom: 28px; }
+.eyebrow {
+  font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent);
+}
+h1 {
+  font-family: var(--display); font-weight: 900; text-transform: uppercase;
+  font-size: clamp(40px, 7vw, 72px); line-height: .92; margin: 0; letter-spacing: .01em;
+  text-wrap: balance;
+}
+.lede { color: var(--muted); margin: 6px 0 0; max-width: 60ch; }
+
+.bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 14px 20px; padding-block: 14px; border-block: 1px solid var(--line); margin-bottom: 24px;
+}
+.progress { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.progress strong { font-family: var(--display); font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.meter { width: 140px; max-width: 40vw; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.meter span { display: block; height: 100%; width: 0; background: var(--seen); transition: width .4s ease; }
+.progress small { color: var(--muted); }
+.tabs { display: flex; gap: 4px; }
+.tabs button {
+  font: inherit; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  background: none; border: 0; color: var(--muted); padding: 6px 12px; border-radius: 4px; cursor: pointer;
+}
+.tabs button[aria-pressed="true"] { color: var(--bg); background: var(--fg); }
+.tabs button:focus-visible, .film button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.grid {
+  display: grid; gap: 22px 16px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  list-style: none; margin: 0; padding: 0;
+}
+@media (max-width: 920px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 680px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 460px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; } }
+
+.film { display: grid; gap: 8px; min-width: 0; }
+.poster {
+  position: relative; aspect-ratio: 2 / 3; max-width: 100%; border-radius: 4px; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: space-between; padding: 10% 9%;
+  background: var(--c1); color: var(--ink);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 6px 18px rgba(0,0,0,.35);
+  transition: transform .2s ease, box-shadow .2s ease, filter .3s ease;
+}
+.poster::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: var(--art);
+}
+.poster > * { position: relative; }
+.poster .p-year { font-size: 10px; font-weight: 600; letter-spacing: .2em; opacity: .85; }
+.poster .p-title {
+  font-family: var(--display); font-weight: 900; text-transform: uppercase;
+  font-size: clamp(16px, 2.1vw, 25px); line-height: .9; letter-spacing: .01em;
+  overflow-wrap: break-word; hyphens: manual;
+}
+.poster .p-dir { font-size: 9px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; opacity: .8; }
+.poster.top { justify-content: flex-start; gap: 6px; }
+.poster.top .p-dir { margin-top: auto; }
+.film:hover .poster { transform: translateY(-3px); box-shadow: inset 0 0 0 2px var(--accent), 0 10px 24px rgba(0,0,0,.45); }
+
+.seen-badge {
+  position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--seen); color: var(--bg); display: grid; place-items: center;
+  font-size: 14px; font-weight: 700; transform: scale(0); transition: transform .25s ease;
+}
+.film.is-seen .seen-badge { transform: scale(1); }
+.film.is-seen .poster { filter: saturate(.55) brightness(.8); }
+
+.meta { display: grid; gap: 2px; min-width: 0; }
+.tflix {
+  justify-self: start; font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 3px; padding: 1px 6px; margin-bottom: 2px;
+}
+.meta h2 { font-size: 14px; font-weight: 600; margin: 0; line-height: 1.25; }
+.meta .sub { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meta p { font-size: 12.5px; color: var(--muted); margin: 2px 0 0; line-height: 1.4; }
+
+.actions { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.toggle {
+  font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+  background: none; color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+}
+.toggle:hover { border-color: var(--muted); }
+.film.is-seen .toggle { background: var(--seen); border-color: var(--seen); color: var(--bg); }
+.stars { display: flex; gap: 1px; }
+.stars[hidden] { display: none !important; }
+.stars button {
+  background: none; border: 0; padding: 0 1px; cursor: pointer; font-size: 15px; line-height: 1;
+  color: var(--line);
+}
+.stars button.on { color: var(--accent); }
+
+.empty { color: var(--muted); padding: 40px 0; text-align: center; }
+footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Curated by Tina · No excuses accepted</span>
+    <h1>Laura's Watchlist</h1>
+    <p class="lede">Movies you somehow haven't seen yet. Anything tagged On TFlix is ready to stream tonight. Mark each one as you watch it, then give it a rating.</p>
+  </header>
+
+  <div class="bar">
+    <div class="progress">
+      <strong id="count">0/0</strong>
+      <div class="meter" aria-hidden="true"><span id="meterFill"></span></div>
+      <small id="countLabel">watched</small>
+    </div>
+    <div class="tabs" role="group" aria-label="Filter films">
+      <button type="button" id="f-all" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" id="f-todo" data-filter="todo" aria-pressed="false">To watch</button>
+      <button type="button" id="f-seen" data-filter="seen" aria-pressed="false">Watched</button>
+    </div>
+  </div>
+
+  <ul class="grid" id="grid"></ul>
+  <p class="empty" id="empty" hidden></p>
+
+  <footer>Your checkmarks and ratings save in this browser only.</footer>
+</div>
+
+<script>
+const FILMS = [
+  { id: "shawshank", t: "The Shawshank Redemption", y: 1994, d: "Frank Darabont", m: 142,
+    l: "A banker sentenced to life in prison builds an unlikely friendship over two decades.",
+    c1: "#2c4a5e", ink: "#f3e7c9", art: "linear-gradient(180deg, transparent 40%, rgba(10,20,30,.7)), repeating-linear-gradient(90deg, transparent 0 18%, rgba(0,0,0,.28) 18% 21%)" },
+  { id: "timetokill", t: "A Time to Kill", y: 1996, d: "Joel Schumacher", m: 149,
+    l: "A young Mississippi lawyer takes on the trial that splits his town in two.",
+    c1: "#8a3b22", ink: "#fbe9d0", art: "radial-gradient(circle at 70% 30%, rgba(255,200,120,.45), transparent 45%), linear-gradient(180deg, transparent 55%, rgba(30,10,5,.6))", top: true },
+  { id: "kingpin", t: "Kingpin", y: 1996, d: "Peter & Bobby Farrelly", m: 113,
+    l: "A washed-up bowler takes an Amish prodigy on the road to a million-dollar tournament.",
+    c1: "#e35d8f", ink: "#1d0f1a", art: "repeating-linear-gradient(90deg, transparent 0 12%, rgba(255,255,255,.14) 12% 13%), radial-gradient(circle at 72% 24%, rgba(20,10,20,.55) 0 13%, transparent 14%)" },
+  { id: "ninetofive", t: "9 to 5", y: 1980, d: "Colin Higgins", m: 110,
+    l: "Three office workers get even with their sexist, lying boss.",
+    c1: "#f3e2b3", ink: "#a2341f", art: "repeating-linear-gradient(0deg, transparent 0 9%, rgba(162,52,31,.12) 9% 10%)", top: true },
+  { id: "greenmile", t: "The Green Mile", y: 1999, d: "Frank Darabont", m: 189,
+    l: "A death-row guard meets a gentle inmate with a gift no one can explain.",
+    c1: "#2f5a3c", ink: "#eaf4d8", art: "linear-gradient(0deg, rgba(160,220,120,.35) 0 6%, transparent 6%), linear-gradient(180deg, rgba(0,0,0,.35), transparent 50%)" },
+  { id: "gone60", t: "Gone in 60 Seconds", y: 2000, d: "Dominic Sena", m: 118,
+    l: "A retired car thief has one night to steal 50 exotic cars, including the one that got away.",
+    c1: "#a7afb6", ink: "#111418", art: "linear-gradient(90deg, transparent 82%, rgba(17,20,24,.85) 82% 87%, transparent 87% 90%, rgba(17,20,24,.85) 90% 95%, transparent 95%), linear-gradient(180deg, rgba(255,255,255,.3), transparent 40%)", top: true },
+  { id: "mrdeeds", t: "Mr. Deeds", y: 2002, d: "Steven Brill", m: 96,
+    l: "A small-town pizzeria owner inherits a $40 billion media empire and has no plans to change.",
+    c1: "#c8322b", ink: "#fff6e8", art: "repeating-conic-gradient(rgba(255,255,255,.14) 0 25%, transparent 0 50%) 0 0 / 28px 28px, linear-gradient(180deg, transparent 55%, rgba(60,10,8,.45))", top: true },
+  { id: "jackiebrown", t: "Jackie Brown", y: 1997, d: "Quentin Tarantino", m: 154,
+    l: "A flight attendant caught smuggling cash plays the feds and a gun runner against each other.",
+    c1: "#d9692a", ink: "#1c1209", art: "linear-gradient(180deg, transparent 58%, rgba(120,40,10,.22) 58%), radial-gradient(circle at 80% 20%, rgba(255,230,160,.4), transparent 35%)", top: true },
+  { id: "primalfear", t: "Primal Fear", y: 1996, d: "Gregory Hoblit", m: 129,
+    l: "A hotshot Chicago defense lawyer takes the case of an altar boy accused of murder.",
+    c1: "#2a2d33", ink: "#e8e2d6", art: "linear-gradient(90deg, rgba(0,0,0,.45) 0 50%, transparent 50%), linear-gradient(180deg, rgba(160,30,30,.35) 0 4%, transparent 4%)" },
+  { id: "rainman", t: "Rain Man", y: 1988, d: "Barry Levinson", m: 133,
+    l: "A selfish car dealer discovers his older brother and takes him on a cross-country drive.",
+    c1: "#6f8fa8", ink: "#f4f1ea", art: "repeating-linear-gradient(100deg, transparent 0 9px, rgba(255,255,255,.13) 9px 10px), linear-gradient(0deg, rgba(20,30,40,.5), transparent 45%)", top: true },
+  { id: "ratrace", t: "Rat Race", y: 2001, d: "Jerry Zucker", m: 112,
+    l: "A Vegas casino owner sends six strangers racing to a locker holding $2 million.",
+    c1: "#f2d43d", ink: "#16233f", art: "repeating-linear-gradient(45deg, transparent 0 14px, rgba(22,35,63,.12) 14px 28px)" },
+  { id: "dochollywood", t: "Doc Hollywood", y: 1991, d: "Michael Caton-Jones", m: 104,
+    l: "A surgeon bound for Beverly Hills crashes in small-town South Carolina and gets stuck there.",
+    c1: "#8fb36a", ink: "#1f2a12", art: "radial-gradient(ellipse at 50% 0%, rgba(255,240,190,.5), transparent 55%), linear-gradient(0deg, rgba(40,60,20,.35), transparent 30%)", top: true },
+  { id: "wildcats", t: "Wildcats", y: 1986, d: "Michael Ritchie", m: 106,
+    l: "Goldie Hawn takes the coaching job nobody wants: a rough inner-city high school football team.",
+    c1: "#5b2a86", ink: "#ffd23f", art: "repeating-linear-gradient(0deg, transparent 0 11%, rgba(255,255,255,.1) 11% 12%), linear-gradient(180deg, transparent 62%, rgba(255,210,63,.3) 62% 66%, transparent 66%)", top: true }
+];
+
+// Films Tina has on TFlix
+const ON_TFLIX = new Set(["shawshank", "timetokill", "kingpin", "ninetofive", "greenmile", "gone60",
+  "jackiebrown", "primalfear", "rainman", "ratrace", "dochollywood", "wildcats"]);
+
+const KEY = "laura-watchlist-v1";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { state = {}; }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+let filter = "all";
+const grid = document.getElementById("grid");
+
+function render() {
+  grid.innerHTML = "";
+  const shown = FILMS.filter(f => {
+    const seen = !!(state[f.id] && state[f.id].seen);
+    return filter === "all" || (filter === "seen" ? seen : !seen);
+  });
+  for (const f of shown) {
+    const s = state[f.id] || {};
+    const li = document.createElement("li");
+    li.className = "film" + (s.seen ? " is-seen" : "");
+    li.innerHTML = `
+      <div class="poster${f.top ? " top" : ""}" style="--c1:${f.c1};--ink:${f.ink};--art:${f.art}" aria-hidden="true">
+        <span class="p-year">${f.y}</span>
+        <span class="p-title">${f.t}</span>
+        <span class="p-dir">${f.d}</span>
+        <span class="seen-badge">✓</span>
+      </div>
+      <div class="meta">
+        ${ON_TFLIX.has(f.id) ? '<span class="tflix">On TFlix</span>' : ''}
+        <h2>${f.t}</h2>
+        <span class="sub">${f.y} · ${f.d} · ${f.m} min</span>
+        <p>${f.l}</p>
+      </div>
+      <div class="actions">
+        <button type="button" class="toggle" id="seen-${f.id}" aria-pressed="${!!s.seen}">${s.seen ? "Watched" : "Mark watched"}</button>
+        <div class="stars" role="group" aria-label="Rate ${f.t}" ${s.seen ? "" : "hidden"}>
+          ${[1,2,3,4,5].map(n => `<button type="button" data-n="${n}" aria-label="${n} star${n>1?"s":""}" class="${(s.rating||0) >= n ? "on" : ""}">★</button>`).join("")}
+        </div>
+      </div>`;
+    li.querySelector(".toggle").addEventListener("click", () => {
+      const cur = state[f.id] || {};
+      cur.seen = !cur.seen;
+      if (!cur.seen) delete cur.rating;
+      state[f.id] = cur; save(); render();
+    });
+    li.querySelectorAll(".stars button").forEach(b => b.addEventListener("click", () => {
+      const n = +b.dataset.n;
+      const cur = state[f.id] || {};
+      cur.rating = cur.rating === n ? 0 : n;
+      state[f.id] = cur; save(); render();
+    }));
+    grid.appendChild(li);
+  }
+  const seenCount = FILMS.filter(f => state[f.id] && state[f.id].seen).length;
+  document.getElementById("count").textContent = `${seenCount}/${FILMS.length}`;
+  document.getElementById("meterFill").style.width = (seenCount / FILMS.length * 100) + "%";
+  document.getElementById("countLabel").textContent =
+    seenCount === FILMS.length ? "watched. Faith in Laura restored." : "watched";
+  const empty = document.getElementById("empty");
+  empty.hidden = shown.length > 0;
+  empty.textContent = filter === "seen" ? "Nothing watched yet. Start with Shawshank." : "All caught up. Tina is proud of you.";
+}
+
+document.querySelectorAll(".tabs button").forEach(b => b.addEventListener("click", () => {
+  filter = b.dataset.filter;
+  document.querySelectorAll(".tabs button").forEach(x => x.setAttribute("aria-pressed", x === b));
+  render();
+}));
+
+render();
+</script>
+</body>
+</html>
